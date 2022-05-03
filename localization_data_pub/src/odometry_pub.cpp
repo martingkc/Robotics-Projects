@@ -2,7 +2,7 @@
 #include <geometry_msgs/TwistStamped.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <nav_msgs/Odometry.h>
-
+#include <localization_data_pub/Mrpm.h>
 #include <sensor_msgs/JointState.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_ros/transform_broadcaster.h>
@@ -33,6 +33,7 @@ public:
   ticks_sub = n.subscribe("wheel_states", 100, &calcOdom::onVelocityUpdate, this);
   odom_pub = n.advertise<nav_msgs::Odometry>("odom", 100);
   velocity_pub = n.advertise<geometry_msgs::TwistStamped>("cmd_vel", 100);
+  wheel_rpm_pub = n.advertise<localization_data_pub::Mrpm>("wheels_rpm", 100);
 }
 
 void onVelocityUpdate(const sensor_msgs::JointState::ConstPtr& msg){
@@ -60,6 +61,7 @@ void onVelocityUpdate(const sensor_msgs::JointState::ConstPtr& msg){
       nTheta = theta + omega*dt;
 
       publishOdometryMsg(nX, nY, nTheta, currentTime, vx, vy,omega);
+	calcRPM(vx, vy, omega, currentTime);
 
       x = nX;
       y = nY;
@@ -90,9 +92,29 @@ double calcVelAng(std::vector<double> wheelRPM){
 	return omega;
 }
 
+void calcRPM(double vx, double vy, double omega, ros::Time time){
+	double rpm_fl = (1/wheelRadius)*(vx - vy -(wheel_x -wheel_y)*omega);
+	double rpm_fr = (1/wheelRadius)*(vx + vy +(wheel_x +wheel_y)*omega);
+	double rpm_rl = (1/wheelRadius)*(vx + vy -(wheel_x +wheel_y)*omega);	
+	double rpm_fr = (1/wheelRadius)*(vx - vy +(wheel_x +wheel_y)*omega);
+	
+	localization_data_pub::Mrpm mrpm; 
+	
+	mrpm.header = time; 
+	mrpm.fl = rpm_fl; 
+	mrpm.fr = rpm_fr;
+	mrpm.rl = rpm_rl;
+	mrpm.rr = rpm_rr;
+	
+	wheel_rpm_pub.publish(mrpm); 
+	
+	
+}
+
+
 
 void publishVelocity(double vx, double vy, double omega){
-  geometry_msgs::Twist vel;
+  geometry_msgs::TwistStamped vel;
   vel.linear.x = vx;
   vel.linear.y = vy;
   vel.angular.z= omega;
@@ -158,6 +180,7 @@ void publishVelocity(double vx, double vy, double omega){
   ros::Subscriber ticks_sub;
   ros::Publisher odom_pub;
   ros::Publisher velocity_pub;
+  ros::Publisher wheel_rpm_pub;
 
 
   ros::Time previousTime;
