@@ -214,8 +214,8 @@ INCLUDE_DIRECTORIES(/usr/local/lib)
 LINK_DIRECTORIES(/usr/local/lib)
  
 
-add_executable(velocity_pub ~/catkin_ws/src/robotics_project/localization_data_pub/src/velocity_pub.cpp)
-add_executable(odometry_pub ~/catkin_ws/src/robotics_project/localization_data_pub/src/odometry_pub.cpp)
+add_executable(velocity_pub src/velocity_pub.cpp)
+add_executable(odometry_pub src/odometry_pub.cpp)
 
 target_link_libraries(odometry_pub ${catkin_LIBRARIES})
 target_link_libraries(velocity_pub ${catkin_LIBRARIES})
