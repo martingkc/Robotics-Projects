@@ -93,18 +93,18 @@ double calcVelAng(std::vector<double> wheelRPM){
 }
 
 void calcRPM(double vx, double vy, double omega, ros::Time time){
-	double rpm_fl = (1/wheelRadius)*(vx - vy -(wheel_x -wheel_y)*omega);
-	double rpm_fr = (1/wheelRadius)*(vx + vy +(wheel_x +wheel_y)*omega);
-	double rpm_rl = (1/wheelRadius)*(vx + vy -(wheel_x +wheel_y)*omega);	
-	double rpm_fr = (1/wheelRadius)*(vx - vy +(wheel_x +wheel_y)*omega);
+	double nrpm_fl = (1/wheelRadius)*(vx - vy -(wheel_x -wheel_y)*omega);
+	double nrpm_fr = (1/wheelRadius)*(vx + vy +(wheel_x +wheel_y)*omega);
+	double nrpm_rl = (1/wheelRadius)*(vx + vy -(wheel_x +wheel_y)*omega);	
+	double nrpm_fr = (1/wheelRadius)*(vx - vy +(wheel_x +wheel_y)*omega);
 	
 	localization_data_pub::Mrpm mrpm; 
 	
 	mrpm.header = time; 
-	mrpm.fl = rpm_fl; 
-	mrpm.fr = rpm_fr;
-	mrpm.rl = rpm_rl;
-	mrpm.rr = rpm_rr;
+	mrpm.rpm_fl = nrpm_fl; 
+	mrpm.rpm_fr = nrpm_fr;
+	mrpm.rpm_rl = nrpm_rl;
+	mrpm.rpm_rr = nrpm_rr;
 	
 	wheel_rpm_pub.publish(mrpm); 
 	
