@@ -61,7 +61,7 @@ void onVelocityUpdate(const sensor_msgs::JointState::ConstPtr& msg){
       nTheta = theta + omega*dt;
 
       publishOdometryMsg(nX, nY, nTheta, currentTime, vx, vy,omega);
-	calcRPM(vx, vy, omega, currentTime);
+	    calcRPM(vx, vy, omega);
 
       x = nX;
       y = nY;
@@ -92,32 +92,32 @@ double calcVelAng(std::vector<double> wheelRPM){
 	return omega;
 }
 
-void calcRPM(double vx, double vy, double omega, ros::Time time){
-	double nrpm_fl = (1/wheelRadius)*(vx - vy -(wheel_x -wheel_y)*omega);
-	double nrpm_fr = (1/wheelRadius)*(vx + vy +(wheel_x +wheel_y)*omega);
-	double nrpm_rl = (1/wheelRadius)*(vx + vy -(wheel_x +wheel_y)*omega);	
-	double nrpm_fr = (1/wheelRadius)*(vx - vy +(wheel_x +wheel_y)*omega);
-	
-	localization_data_pub::Mrpm mrpm; 
-	
-	mrpm.header = time; 
-	mrpm.rpm_fl = nrpm_fl; 
+void calcRPM(double vx, double vy, double omega){
+	float nrpm_fl = (1/wheelRadius)*(vx - vy -(wheel_x -wheel_y)*omega);
+	float nrpm_fr = (1/wheelRadius)*(vx + vy +(wheel_x +wheel_y)*omega);
+	float nrpm_rl = (1/wheelRadius)*(vx + vy -(wheel_x +wheel_y)*omega);
+	float nrpm_rr = (1/wheelRadius)*(vx - vy +(wheel_x +wheel_y)*omega);
+
+	localization_data_pub::Mrpm mrpm;
+
+
+	mrpm.rpm_fl = nrpm_fl;
 	mrpm.rpm_fr = nrpm_fr;
 	mrpm.rpm_rl = nrpm_rl;
 	mrpm.rpm_rr = nrpm_rr;
-	
-	wheel_rpm_pub.publish(mrpm); 
-	
-	
+
+	wheel_rpm_pub.publish(mrpm);
+
+
 }
 
 
 
 void publishVelocity(double vx, double vy, double omega){
   geometry_msgs::TwistStamped vel;
-  vel.linear.x = vx;
-  vel.linear.y = vy;
-  vel.angular.z= omega;
+  vel.twist.linear.x = vx;
+  vel.twist.linear.y = vy;
+  vel.twist.angular.z= omega;
   velocity_pub.publish(vel);
 }
 
