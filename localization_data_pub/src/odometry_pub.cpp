@@ -7,6 +7,9 @@
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include "localization_data_pub/ResetPose.h"
+
+#include <dynamic_reconfigure/server.h>
+#include <localization_data_pub/parametersConfig.h>
 ros::Time previousTime;
 ros::Publisher odom_pub;
 
@@ -39,6 +42,18 @@ public:
   
 }
 
+void onIntegrationMethodChange(rb1::parametersConfig &config, uint32_t level){
+  switch (config.integMethod)
+  {
+    case 0:
+    integMethod = Euler;
+    break;
+    case 1:
+    integMethod = RungeKutta;
+    break;
+  } 
+}
+	
 void onVelocityUpdate(const sensor_msgs::JointState::ConstPtr& msg){
 
     	ros::Time currentTime = ros::Time::now();
@@ -187,7 +202,10 @@ bool resetOdometryPose(localization_data_pub::ResetPose::Request &req, localizat
   ros::Publisher velocity_pub;
   ros::Publisher wheel_rpm_pub;
 
-
+  dynamic_reconfigure::Server<rb1::parametersConfig> method_server;
+  dynamic_reconfigure::Server<rb1::parametersConfig>::CallbackType method_callback;
+  IntegrationMethod integMethod;
+	
   ros::Time previousTime;
 };
 
