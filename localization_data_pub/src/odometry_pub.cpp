@@ -24,6 +24,7 @@ const double gearRatio = 5.0;
 std::vector<double> previousTicks(4,0.0);
 std::vector<double> wheelRPM(4,0.0);
 
+enum Integration {RungeKutta, Euler};
 
 using namespace std;
 
@@ -59,10 +60,21 @@ void onVelocityUpdate(const sensor_msgs::JointState::ConstPtr& msg){
       double omega= calcVelAng(wheelRPM);
       publishVelocity(vx,vy,omega); 
 	
+      switch(Integration){
 
-      nX =x + (vx* cos(theta)-vy*sin(theta))*dt;
-      nY =y+ (vx* sin(theta)+vy*cos(theta))*dt;
-      nTheta = theta + omega*dt;
+	      case Euler:
+		     nX =x + (vx* cos(theta)-vy*sin(theta))*dt;
+      	             nY =y+ (vx* sin(theta)+vy*cos(theta))*dt;
+      		     nTheta = theta + omega*dt;
+		     break; 
+	      case RungeKutta:
+		      float phi = theta + omega*dt/2;
+		      nX =x + (vx* cos(phi)-vy*sin(phi))*dt;
+      	              nY =y+ (vx* sin(phi)+vy*cos(phi))*dt;
+      		      nTheta = theta + omega*dt;
+		      break;
+		      
+      }
 
       publishOdometryMsg(nX, nY, nTheta, currentTime, vx, vy,omega);
 
