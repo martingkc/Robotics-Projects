@@ -1,4 +1,3 @@
-
 cmake_minimum_required(VERSION 3.0.2)
 project(localization_data_pub)
 
@@ -219,9 +218,20 @@ LINK_DIRECTORIES(/usr/local/lib)
 
 
 add_executable(odometry_pub  ~/catkin_ws/src/robotics_project/localization_data_pub/src/odometry_pub.cpp)
+add_executable(rpm_pub  ~/catkin_ws/src/robotics_project/localization_data_pub/src/rpm_pub.cpp)
 
 target_link_libraries(odometry_pub ${catkin_LIBRARIES})
 
 
 
-add_dependencies(odometry_pub ${catkin_EXPORTED_TARGETS})
+add_dependencies(odometry_pub ${catkin_EXPORTED_TARGETS} 
+ ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${PROJECT_NAME}_generate_messages
+  ${PROJECT_NAME}_gencfg) 
+
+add_dependencies(rpm_pub ${catkin_EXPORTED_TARGETS} 
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${PROJECT_NAME}_generate_messages
+  ${PROJECT_NAME}_gencfg)
+target_link_libraries(rpm_pub ${catkin_LIBRARIES})  
+ 
