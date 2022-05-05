@@ -13,15 +13,15 @@ const int ticks = 42;
 const double wheel_x = 0.2;
 const double wheel_y = 0.169;
 
-ros::Publisher wheel_pub_pub;
+ros::Publisher wheel_rpm_pub;
 
-void onVelocityUpdate(const geoetry_msgs::TwistStamped::ConstPtr& msg){
-  
+void onVelocityUpdate(const geometry_msgs::TwistStamped::ConstPtr& msg){
+
   double vx = msg->twist.linear.x;
   double vy = msg->twist.linear.y;
   double omega = msg->twist.angular.z;
-  
-  
+
+
   float nrpm_fl = (1/wheelRadius)*(vx - vy -(wheel_x -wheel_y)*omega);
 	float nrpm_fr = (1/wheelRadius)*(vx + vy +(wheel_x +wheel_y)*omega);
 	float nrpm_rl = (1/wheelRadius)*(vx + vy -(wheel_x +wheel_y)*omega);
@@ -36,24 +36,23 @@ void onVelocityUpdate(const geoetry_msgs::TwistStamped::ConstPtr& msg){
 	mrpm.rpm_rr = nrpm_rr;
 
 	wheel_rpm_pub.publish(mrpm);
-  
+
 }
 int main(int argc, char **argv)
 {
   ros::init(argc, argv,"rpm_pub");
-  ros::NodeHandle n; 
-  
-  
-  ros::Subscriber vel_sub = n.subscribe("cmd_vel", 1000,onVelocityUpdate); 
-  wheel_pub_pub = n.advertise(localization_data_pub::Mrpm>("wheels_rpm",1000);
-  ros::Rate loop_rate(100); 
-  while(ros::ok()){
-    
-    ros::spinOnce();
-    loop_rate.sleep(); 
-  }
-  return 0; 
-                                       
-}                                                                                          
+  ros::NodeHandle n;
 
+
+  ros::Subscriber vel_sub = n.subscribe("cmd_vel", 1000, onVelocityUpdate);
+  wheel_rpm_pub = n.advertise<localization_data_pub::Mrpm>("wheels_rpm",1000);
+  ros::Rate loop_rate(100);
+  while(ros::ok()){
+
+    ros::spinOnce();
+    loop_rate.sleep();
+  }
+  return 0;
+
+}
 
