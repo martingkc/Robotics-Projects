@@ -22,11 +22,11 @@ void onVelocityUpdate(const geometry_msgs::TwistStamped::ConstPtr& msg){
   double omega = msg->twist.angular.z;
 
 
-  float nrpm_fl = (1/wheelRadius)*(vx - vy -(wheel_x -wheel_y)*omega);
-	float nrpm_fr = (1/wheelRadius)*(vx + vy +(wheel_x +wheel_y)*omega);
-	float nrpm_rl = (1/wheelRadius)*(vx + vy -(wheel_x +wheel_y)*omega);
-	float nrpm_rr = (1/wheelRadius)*(vx - vy +(wheel_x +wheel_y)*omega);
-
+  	float nrpm_fl = (60/(2*pi*wheelRadius))*(vx - vy -(wheel_x -wheel_y)*omega);
+	float nrpm_fr = (60/(2*pi*wheelRadius))*(vx + vy +(wheel_x +wheel_y)*omega);
+	float nrpm_rl = (60/(2*pi*wheelRadius))*(vx + vy -(wheel_x +wheel_y)*omega);
+	float nrpm_rr = (60/(2*pi*wheelRadius))*(vx - vy +(wheel_x +wheel_y)*omega);
+	
 	localization_data_pub::Mrpm mrpm;
 
 
