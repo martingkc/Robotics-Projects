@@ -6,6 +6,7 @@
 #include <sensor_msgs/JointState.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_ros/transform_broadcaster.h>
+#include "localization_data_pub/ResetPose.h"
 ros::Time previousTime;
 ros::Publisher odom_pub;
 
@@ -33,6 +34,7 @@ public:
   ticks_sub = n.subscribe("wheel_states", 100, &calcOdom::onVelocityUpdate, this);
   odom_pub = n.advertise<nav_msgs::Odometry>("odom", 100);
   velocity_pub = n.advertise<geometry_msgs::TwistStamped>("cmd_vel", 100);
+  pose_service = n.advertiseService("reset_pose", &calcOdom::resetOdometryPose, this);
   
 }
 
@@ -151,10 +153,18 @@ void publishVelocity(double vx, double vy, double omega){
 
     //Send the transform
     br.sendTransform(odomTransform);
-
+  
 
     }
-
+  
+bool resetOdometryPose(localization_data_pub::ResetPose::Request &req, localization_data_pub::ResetPose::Response &res){
+  x = req.givenX;
+  y = req.givenY;
+  theta = req.givenTheta;
+  previousTime = ros::Time::now();
+  return true;
+}	
+	
   private:
   ros::NodeHandle n;
   tf2_ros::TransformBroadcaster br;
