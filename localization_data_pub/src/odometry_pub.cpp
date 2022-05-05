@@ -55,6 +55,8 @@ void onVelocityUpdate(const sensor_msgs::JointState::ConstPtr& msg){
       double vx = calcVelX(wheelRPM);
       double vy = calcVelY(wheelRPM);
       double omega= calcVelAng(wheelRPM);
+      publishVelocity(vx,vy,omega); 
+	
 
       nX =x + (vx* cos(theta)-vy*sin(theta))*dt;
       nY =y+ (vx* sin(theta)+vy*cos(theta))*dt;
