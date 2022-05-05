@@ -33,7 +33,7 @@ public:
   ticks_sub = n.subscribe("wheel_states", 100, &calcOdom::onVelocityUpdate, this);
   odom_pub = n.advertise<nav_msgs::Odometry>("odom", 100);
   velocity_pub = n.advertise<geometry_msgs::TwistStamped>("cmd_vel", 100);
-  wheel_rpm_pub = n.advertise<localization_data_pub::Mrpm>("wheels_rpm", 100);
+  
 }
 
 void onVelocityUpdate(const sensor_msgs::JointState::ConstPtr& msg){
@@ -61,7 +61,6 @@ void onVelocityUpdate(const sensor_msgs::JointState::ConstPtr& msg){
       nTheta = theta + omega*dt;
 
       publishOdometryMsg(nX, nY, nTheta, currentTime, vx, vy,omega);
-	    calcRPM(vx, vy, omega);
 
       x = nX;
       y = nY;
@@ -92,24 +91,6 @@ double calcVelAng(std::vector<double> wheelRPM){
 	return omega;
 }
 
-void calcRPM(double vx, double vy, double omega){
-	float nrpm_fl = (1/wheelRadius)*(vx - vy -(wheel_x -wheel_y)*omega);
-	float nrpm_fr = (1/wheelRadius)*(vx + vy +(wheel_x +wheel_y)*omega);
-	float nrpm_rl = (1/wheelRadius)*(vx + vy -(wheel_x +wheel_y)*omega);
-	float nrpm_rr = (1/wheelRadius)*(vx - vy +(wheel_x +wheel_y)*omega);
-
-	localization_data_pub::Mrpm mrpm;
-
-
-	mrpm.rpm_fl = nrpm_fl;
-	mrpm.rpm_fr = nrpm_fr;
-	mrpm.rpm_rl = nrpm_rl;
-	mrpm.rpm_rr = nrpm_rr;
-
-	wheel_rpm_pub.publish(mrpm);
-
-
-}
 
 
 
