@@ -217,8 +217,8 @@ LINK_DIRECTORIES(/usr/local/lib)
  
 
 
-add_executable(odometry_pub  ~/catkin_ws/src/robotics_project/localization_data_pub/src/odometry_pub.cpp)
-add_executable(rpm_pub  ~/catkin_ws/src/robotics_project/localization_data_pub/src/rpm_pub.cpp)
+add_executable(odometry_pub  src/odometry_pub.cpp)
+add_executable(rpm_pub  src/rpm_pub.cpp)
 
 target_link_libraries(odometry_pub ${catkin_LIBRARIES})
 
