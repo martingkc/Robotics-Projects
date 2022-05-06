@@ -146,13 +146,27 @@ void publishVelocity(double vx, double vy, double omega){
     odomTransform.transform.translation.y = y;
     odomTransform.transform.translation.z = 0.0;
 
-    tf2::Quaternion q;
-    q.setRPY(0, 0, theta);
+    
+    tf2::Quaternion myQuaternion;
 
-    odomTransform.transform.rotation.x = q.x();
-    odomTransform.transform.rotation.y = q.y();
-    odomTransform.transform.rotation.z = q.z();
-    odomTransform.transform.rotation.w = q.w();
+    myQuaternion.setRPY(0, 0, theta);  
+
+    ROS_INFO_STREAM("x: " << myQuaternion.getX() << " y : " << myQuaternion.getY() <<
+          " z: " << myQuaternion.getZ() << " w: " << myQuaternion.getW());
+
+    myQuaternion.normalize();
+
+    geometry_msgs::Quaternion quat_msgs;
+    quat_msgs.x = x;
+    quat_msgs.y = y;
+    quat_msgs.w = theta;
+    tf2::convert(myQuaternion, quat_msgs);
+
+
+    odomTransform.transform.rotation.x = myQuaternion.x();
+    odomTransform.transform.rotation.y = myQuaternion.y();
+    odomTransform.transform.rotation.z = myQuaternion.z();
+    odomTransform.transform.rotation.w = myQuaternion.w();
 
 
   	odomMsg.header.stamp = time;
@@ -165,10 +179,10 @@ void publishVelocity(double vx, double vy, double omega){
 
 
 
-    odomMsg.pose.pose.orientation.x = q.x();
-    odomMsg.pose.pose.orientation.y = q.y();
-    odomMsg.pose.pose.orientation.z = q.z();
-    odomMsg.pose.pose.orientation.w = q.w();
+    odomMsg.pose.pose.orientation.x = myQuaternion.x();
+    odomMsg.pose.pose.orientation.y = myQuaternion.y();
+    odomMsg.pose.pose.orientation.z = myQuaternion.z();
+    odomMsg.pose.pose.orientation.w = myQuaternion.w();
 
   	//Set the velocity
   	odomMsg.child_frame_id = "base_link";
