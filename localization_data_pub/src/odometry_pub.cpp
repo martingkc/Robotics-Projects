@@ -6,10 +6,12 @@
 #include <sensor_msgs/JointState.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_ros/transform_broadcaster.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include "localization_data_pub/ResetPose.h"
 
 #include <dynamic_reconfigure/server.h>
 #include <localization_data_pub/parametersConfig.h>
+
 ros::Time previousTime;
 ros::Publisher odom_pub;
 
@@ -27,7 +29,7 @@ const double gearRatio = 5.0;
 std::vector<double> previousTicks(4,0.0);
 std::vector<double> wheelRPM(4,0.0);
 
-enum Integration {RungeKutta, Euler};
+enum IntegrationMethod { Euler, RungeKutta};
 
 using namespace std;
 
@@ -38,9 +40,12 @@ public:
   ticks_sub = n.subscribe("wheel_states", 100, &calcOdom::onVelocityUpdate, this);
   odom_pub = n.advertise<nav_msgs::Odometry>("odom", 100);
   velocity_pub = n.advertise<geometry_msgs::TwistStamped>("cmd_vel", 100);
-  
+
+  integMethod = Euler;
+
   method_callback = boost::bind(&calcOdom::onIntegrationMethodChange, this, _1, _2);
-  method_server.setCallback(method_callback);	  
+  method_server.setCallback(method_callback);   
+
   pose_service = n.advertiseService("reset_pose", &calcOdom::resetOdometryPose, this);
   
 }
@@ -49,19 +54,21 @@ void onIntegrationMethodChange(localization_data_pub::parametersConfig &config, 
   switch (config.integMethod)
   {
     case 0:
-    integMethod = Euler; dynamic_reconfigure::Server<localization_data_pub::parametersConfig> method_server;
-  dynamic_reconfigure::Server<localization_data_pub::parametersConfig>::CallbackType method_callback;
-  
+    integMethod = Euler;
+
+    //dynamic_reconfigure::Server<localization_data_pub::parametersConfig> method_server;
+    //dynamic_reconfigure::Server<localization_data_pub::parametersConfig>::CallbackType method_callback;
+
     break;
     case 1:
     integMethod = RungeKutta;
     break;
   } 
 }
-	
+  
 void onVelocityUpdate(const sensor_msgs::JointState::ConstPtr& msg){
 
-    	ros::Time currentTime = ros::Time::now();
+      ros::Time currentTime = ros::Time::now();
       double dt = (currentTime - previousTime).toSec();
       double nX, nY, nTheta;
 
@@ -79,21 +86,21 @@ void onVelocityUpdate(const sensor_msgs::JointState::ConstPtr& msg){
       double vy = calcVelY(wheelRPM);
       double omega= calcVelAng(wheelRPM);
       publishVelocity(vx,vy,omega); 
-	
-      switch(Integration){
+  
+      switch(integMethod){
 
-	      case Euler:
-		     nX =x + (vx* cos(theta)-vy*sin(theta))*dt;
-      	             nY =y+ (vx* sin(theta)+vy*cos(theta))*dt;
-      		     nTheta = theta + omega*dt;
-		     break; 
-	      case RungeKutta:
-		      float phi = theta + omega*dt/2;
-		      nX =x + (vx* cos(phi)-vy*sin(phi))*dt;
-      	              nY =y+ (vx* sin(phi)+vy*cos(phi))*dt;
-      		      nTheta = theta + omega*dt;
-		      break;
-		      
+        case Euler:
+         nX =x + (vx* cos(theta)-vy*sin(theta))*dt;
+                     nY =y+ (vx* sin(theta)+vy*cos(theta))*dt;
+               nTheta = theta + omega*dt;
+         break; 
+        case RungeKutta:
+          float phi = theta + omega*dt/2;
+          nX =x + (vx* cos(phi)-vy*sin(phi))*dt;
+                      nY =y+ (vx* sin(phi)+vy*cos(phi))*dt;
+                nTheta = theta + omega*dt;
+          break;
+          
       }
 
       publishOdometryMsg(nX, nY, nTheta, currentTime, vx, vy,omega);
@@ -124,7 +131,7 @@ double calcVelY(std::vector<double> wheelRPM){
 }
 double calcVelAng(std::vector<double> wheelRPM){
   double omega = (wheelRadius/(4*(wheel_x+wheel_y)))*(-wheelRPM[0] + wheelRPM[1] -  wheelRPM[2] + wheelRPM[3]);
-	return omega;
+  return omega;
 }
 
 
@@ -209,32 +216,37 @@ bool resetOdometryPose(localization_data_pub::ResetPose::Request &req, localizat
   theta = req.givenTheta;
   previousTime = ros::Time::now();
   return true;
-}	
-	
+} 
+  
   private:
   ros::NodeHandle n;
   tf2_ros::TransformBroadcaster br;
+
   geometry_msgs::TransformStamped odomTransform;
   nav_msgs::Odometry odomMsg;
+
   ros::Subscriber ticks_sub;
   ros::Publisher odom_pub;
   ros::Publisher velocity_pub;
   ros::Publisher wheel_rpm_pub;
+  ros::ServiceServer pose_service;
 
   dynamic_reconfigure::Server<localization_data_pub::parametersConfig> method_server;
-  dynamic_reconfigure::Server<localization_data_pub::parametersConfig>::CallbackType method_callback; 
+  dynamic_reconfigure::Server<localization_data_pub::parametersConfig>::CallbackType method_callback;
+
   IntegrationMethod integMethod;
-	
+  
   ros::Time previousTime;
 };
 
 int main(int argc, char **argv){
 
-	ros::init(argc, argv, "rb1_odometry");
+  ros::init(argc, argv, "rb1_odometry");
 
-	calcOdom newCalcOdom;
+  calcOdom newCalcOdom;
 
   ros::spin();
 
   return 0;
 }
+
