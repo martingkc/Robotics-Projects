@@ -38,15 +38,20 @@ public:
   ticks_sub = n.subscribe("wheel_states", 100, &calcOdom::onVelocityUpdate, this);
   odom_pub = n.advertise<nav_msgs::Odometry>("odom", 100);
   velocity_pub = n.advertise<geometry_msgs::TwistStamped>("cmd_vel", 100);
+  
+  method_callback = boost::bind(&calcOdom::onIntegrationMethodChange, this, _1, _2);
+  method_server.setCallback(method_callback);	  
   pose_service = n.advertiseService("reset_pose", &calcOdom::resetOdometryPose, this);
   
 }
 
-void onIntegrationMethodChange(rb1::parametersConfig &config, uint32_t level){
+void onIntegrationMethodChange(localization_data_pub::parametersConfig &config, uint32_t level){
   switch (config.integMethod)
   {
     case 0:
-    integMethod = Euler;
+    integMethod = Euler; dynamic_reconfigure::Server<localization_data_pub::parametersConfig> method_server;
+  dynamic_reconfigure::Server<localization_data_pub::parametersConfig>::CallbackType method_callback;
+  
     break;
     case 1:
     integMethod = RungeKutta;
@@ -202,8 +207,8 @@ bool resetOdometryPose(localization_data_pub::ResetPose::Request &req, localizat
   ros::Publisher velocity_pub;
   ros::Publisher wheel_rpm_pub;
 
-  dynamic_reconfigure::Server<rb1::parametersConfig> method_server;
-  dynamic_reconfigure::Server<rb1::parametersConfig>::CallbackType method_callback;
+  dynamic_reconfigure::Server<localization_data_pub::parametersConfig> method_server;
+  dynamic_reconfigure::Server<localization_data_pub::parametersConfig>::CallbackType method_callback; 
   IntegrationMethod integMethod;
 	
   ros::Time previousTime;
