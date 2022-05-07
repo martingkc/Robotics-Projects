@@ -24,6 +24,7 @@ const double ticksPerMeter = (1/(2*pi*wheelRadius))*42;
 const int ticks = 42;
 const double wheel_x = 0.2;
 const double wheel_y = 0.169;
+bool hasPrev;
 
 const double gearRatio = 5.0;
 std::vector<double> previousTicks(4,0.0);
@@ -43,11 +44,13 @@ public:
 
   integMethod = Euler;
 
+  hasPrev = false;
+
   method_callback = boost::bind(&calcOdom::onIntegrationMethodChange, this, _1, _2);
-  method_server.setCallback(method_callback);   
+  method_server.setCallback(method_callback);
 
   pose_service = n.advertiseService("reset_pose", &calcOdom::resetOdometryPose, this);
-  
+
 }
 
 void onIntegrationMethodChange(localization_data_pub::parametersConfig &config, uint32_t level){
@@ -63,12 +66,17 @@ void onIntegrationMethodChange(localization_data_pub::parametersConfig &config, 
     case 1:
     integMethod = RungeKutta;
     break;
-  } 
+  }
 }
-  
-void onVelocityUpdate(const sensor_msgs::JointState::ConstPtr& msg){
 
-      ros::Time currentTime = ros::Time::now();
+void onVelocityUpdate(const sensor_msgs::JointState::ConstPtr& msg){
+      if(!hasPrev){
+        previousTicks = msg ->position;
+        hasPrev = true;
+      }
+
+
+      ros::Time currentTime = ros::Time::now();;
       double dt = (currentTime - previousTime).toSec();
       double nX, nY, nTheta;
 
@@ -85,22 +93,22 @@ void onVelocityUpdate(const sensor_msgs::JointState::ConstPtr& msg){
       double vx = calcVelX(wheelRPM);
       double vy = calcVelY(wheelRPM);
       double omega= calcVelAng(wheelRPM);
-      publishVelocity(vx,vy,omega); 
-  
+      publishVelocity(vx,vy,omega);
+
       switch(integMethod){
 
         case Euler:
          nX =x + (vx* cos(theta)-vy*sin(theta))*dt;
                      nY =y+ (vx* sin(theta)+vy*cos(theta))*dt;
                nTheta = theta + omega*dt;
-         break; 
+         break;
         case RungeKutta:
           float phi = theta + omega*dt/2;
           nX =x + (vx* cos(phi)-vy*sin(phi))*dt;
                       nY =y+ (vx* sin(phi)+vy*cos(phi))*dt;
                 nTheta = theta + omega*dt;
           break;
-          
+
       }
 
       publishOdometryMsg(nX, nY, nTheta, currentTime, vx, vy,omega);
@@ -158,10 +166,10 @@ void publishVelocity(double vx, double vy, double omega){
     odomTransform.transform.translation.y = y;
     odomTransform.transform.translation.z = 0.0;
 
-    
+
     tf2::Quaternion myQuaternion;
 
-    myQuaternion.setRPY(0, 0, 0);  
+    myQuaternion.setRPY(0, 0, 0);
 
     ROS_INFO_STREAM("x: " << myQuaternion.getX() << " y : " << myQuaternion.getY() <<
           " z: " << myQuaternion.getZ() << " w: " << myQuaternion.getW());
@@ -206,25 +214,18 @@ void publishVelocity(double vx, double vy, double omega){
 
     //Send the transform
     br.sendTransform(odomTransform);
-  
+
 
     }
-  
+
 bool resetOdometryPose(localization_data_pub::ResetPose::Request &req, localization_data_pub::ResetPose::Response &res){
-  if (req.givenX==0 && req.givenY==0 && req.givenTheta == 0){
-    x=x;
-    y=y;
-    theta=theta; 
-  }else{
-    x = req.givenX;
-    y = req.givenY;
-    theta = req.givenTheta;
-  }
+  x = req.givenX;
+  y = req.givenY;
+  theta = req.givenTheta;
   previousTime = ros::Time::now();
   return true;
 }
 
-  
   private:
   ros::NodeHandle n;
   tf2_ros::TransformBroadcaster br;
@@ -242,8 +243,8 @@ bool resetOdometryPose(localization_data_pub::ResetPose::Request &req, localizat
   dynamic_reconfigure::Server<localization_data_pub::parametersConfig>::CallbackType method_callback;
 
   IntegrationMethod integMethod;
-  
-  ros::Time previousTime;
+
+  ros::Time previousTime = ros::Time::now();
 };
 
 int main(int argc, char **argv){
@@ -256,4 +257,3 @@ int main(int argc, char **argv){
 
   return 0;
 }
-
