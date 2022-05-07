@@ -211,12 +211,19 @@ void publishVelocity(double vx, double vy, double omega){
     }
   
 bool resetOdometryPose(localization_data_pub::ResetPose::Request &req, localization_data_pub::ResetPose::Response &res){
-  x = req.givenX;
-  y = req.givenY;
-  theta = req.givenTheta;
+  if (req.givenX==0 && req.givenY==0 && req.givenTheta == 0){
+    x=x;
+    y=y;
+    theta=theta; 
+  }else{
+    x = req.givenX;
+    y = req.givenY;
+    theta = req.givenTheta;
+  }
   previousTime = ros::Time::now();
   return true;
-} 
+}
+
   
   private:
   ros::NodeHandle n;
