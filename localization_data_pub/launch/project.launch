@@ -1,7 +1,7 @@
 <launch>
   <node pkg="localization_data_pub" type="odometry_pub" name="odometry_pub"/>
   <node pkg="localization_data_pub" type="rpm_pub" name="rpm_pub"/>
-  <node pkg="tf2_ros" type="static_transform_publisher" name="back_right" args="0 0 0 0 0 0 0 world odom " />
+  <node pkg="tf2_ros" type="static_transform_publisher" name="back_right" args="0 0 0 0 0 0 1 world odom " />
 
   <param name="use_sim_time" value="true"/>
   
