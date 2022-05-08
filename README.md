@@ -12,7 +12,7 @@ The structure of the TF tree is present in the frames.pdf file the structure of 
 WARNINGS: 
 Sometimes when the bag files recording ends and loops back due to the TF buffer being full rviz can give errors and shift the odometry. We suggest not playing the bag files with the loop functionality of rosbag turned on. 
 
-!!!!!Dont forget to change the world frames quaternion for each bag from the launch file and dont forget to change to the calibrated values by uncommenting the values in the odonmetry_pub.cpp file for each bag!!!!!
+Dont forget to change the world frames quaternion for each bag from the launch file and dont forget to change to the calibrated values by uncommenting the values in the odometry_pub.cpp file for each bag
 
 SUGGESTIONS: 
 - our launch file is configured to run bags we suggest you to check the paths to the bags before running the project (for ease you can directly copy the bag files to the bags folder present in the project folder) 
