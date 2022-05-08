@@ -19,10 +19,10 @@ double x = 0;
 double y = 0;
 double theta = 0;
 const double pi = 3.1415;
-const double wheelRadius = 0.07;
+const double wheelRadius = 0.0612;
 const double ticksPerMeter = (1/(2*pi*wheelRadius))*42;
-const int ticks = 42;
-const double wheel_x = 0.19;
+const int ticks = 58;
+const double wheel_x = 0.197;
 const double wheel_y = 0.169;
 bool hasPrev;
 
