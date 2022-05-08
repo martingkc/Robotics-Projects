@@ -1,12 +1,26 @@
 <launch>
   <node pkg="localization_data_pub" type="odometry_pub" name="odometry_pub"/>
   <node pkg="localization_data_pub" type="rpm_pub" name="rpm_pub"/>
-   <node pkg="tf2_ros" type="static_transform_publisher" name="back_right" args="0.00815962441265583 0.0030597213190048933 0.3687083423137665 -0.011577633209526539 -0.02075166068971157 -0.019595127552747726 0.9995256066322327 world odom " />
 
+    <?ignore 
+    We start with the initial parameteres of bag1, you can comment this part of code
+    and un-comment the part of the corresping bag you want ot run
+    ?>
+
+    <node pkg="tf2_ros" type="static_transform_publisher" name="back_right" args="0.00815962441265583 0.0030597213190048933 0.3687083423137665 -0.011577633209526539 -0.02075166068971157 -0.019595127552747726 0.9995256066322327 world odom " />
+
+    <?ignore Initial parameteres for bag2
+    <node pkg="tf2_ros" type="static_transform_publisher" name="back_right" args="0.0242218170315 0.00374252465554 0.372348427773 0.0338488332927 -0.0555740334094 -0.00280516617931 0.997876763344 world odom " />
+    ?>
+
+    <?ignore Initial parameteres for bag3
+    <node pkg="tf2_ros" type="static_transform_publisher" name="back_right" args="0.00546012399718 0.0399703718722 0.370361357927 -0.0105932056904 -0.0247681923211 -0.00675158947706 0.999614357948 world odom " />
+    ?>
+  
   <param name="use_sim_time" value="true"/>
   
   <param name="pose/X" value="0.0"/>
   <param name="pose/Y" value="0.0"/>
   <param name="pose/Theta" value="0"/>
-  <node pkg="rosbag" type="play" name="player" args="-l --clock /home/martin/catkin_ws/src/robotics_project/localization_data_pub/bags/bag1.bag"/>
+  <node pkg="rosbag" type="play" name="player" args="-l --clock /home/jody/robotics/src/localization_data_pub/bags/bag2.bag"/>
 </launch>
