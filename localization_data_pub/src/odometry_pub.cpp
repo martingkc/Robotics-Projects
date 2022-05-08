@@ -21,21 +21,21 @@ double theta = 0;
 const double pi = 3.1415;
 //Calibrated Values For Bag1
 const double wheelRadius = 0.07;
-const double ticksPerMeter = (1/(2*pi*wheelRadius))*42;
+
 const int ticks = 42;
 const double wheel_x = 0.2;
 const double wheel_y = 0.169;
 
 //Calibrated Values For Bag2
 /*const double wheelRadius = 0.075;
-const double ticksPerMeter = (1/(2*pi*wheelRadius))*42;
+
 const int ticks = 42;
 const double wheel_x = 0.186;
 const double wheel_y = 0.169;*/
 
 //Calibrated Values For Bag3
 /*const double wheelRadius = 0.07;
-const double ticksPerMeter = (1/(2*pi*wheelRadius))*42;
+
 const int ticks = 42;
 const double wheel_x = 0.19;
 const double wheel_y = 0.169;*/
@@ -43,8 +43,8 @@ const double wheel_y = 0.169;*/
 bool hasPrev;
 
 const double gearRatio = 5.0;
-std::vector<double> previousTicks(4,0.0);
-std::vector<double> wheelRPM(4,0.0);
+std::vector<double> previousTicks(4,0.0); //the vector that contains the previous ticks that are necessary to calculate delta ticks
+std::vector<double> wheelRPM(4,0.0); //the vector that contains the speeds of each wheel in radiants in seconds 
 
 enum IntegrationMethod { Euler, RungeKutta};
 
@@ -54,7 +54,7 @@ class calcOdom{
 public:
   calcOdom(){
   previousTime = ros::Time::now();
-  ticks_sub = n.subscribe("wheel_states", 100, &calcOdom::onVelocityUpdate, this);
+  ticks_sub = n.subscribe("wheel_states", 100, &calcOdom::onVelocityUpdate, this); 
   odom_pub = n.advertise<nav_msgs::Odometry>("odom", 100);
   velocity_pub = n.advertise<geometry_msgs::TwistStamped>("cmd_vel", 100);
 
@@ -89,18 +89,18 @@ void onIntegrationMethodChange(localization_data_pub::parametersConfig &config, 
 
 void onVelocityUpdate(const sensor_msgs::JointState::ConstPtr& msg){
 
-      if(!hasPrev){
-        previousTicks = msg->position;
+      if(!hasPrev){ //if its the first data received from the encoders the first dticks has to be 0 or else the robot starts in random places 
+        previousTicks = msg->position; 
         hasPrev = true;
       }
 
       ros::Time currentTime = ros::Time::now();;
-      double dt = (currentTime - previousTime).toSec();
-      double nX, nY, nTheta;
+      double dt = (currentTime - previousTime).toSec(); //we take the time readings in nSecs and we transform them to secs 
+      double nX, nY, nTheta; // we initialize the new X, Y, Theta values
 
-      std::vector<double> ticks = msg->position;
+      std::vector<double> ticks = msg->position; //this is the vector that is going to hold the current encoder readings
 
-      for(int i = 0; i<ticks.size(); i++){
+      for(int i = 0; i<ticks.size(); i++){ 
 
         double dTicks = ticks[i]-previousTicks[i];
         wheelRPM[i] = rpmFromTicks(dTicks, dt);
@@ -108,10 +108,10 @@ void onVelocityUpdate(const sensor_msgs::JointState::ConstPtr& msg){
       }
       previousTicks  = ticks;
 
-      double vx = calcVelX(wheelRPM);
+      double vx = calcVelX(wheelRPM); //these variables contain the velocities that are calculated with the calcVel function
       double vy = calcVelY(wheelRPM);
       double omega= calcVelAng(wheelRPM);
-      publishVelocity(vx,vy,omega);
+      publishVelocity(vx,vy,omega); 
 
       switch(integMethod){
 
@@ -139,7 +139,7 @@ void onVelocityUpdate(const sensor_msgs::JointState::ConstPtr& msg){
 
 }
 
-double rpmFromTicks(double dTicks, double dt ){
+double rpmFromTicks(double dTicks, double dt ){ //this is in radiants not in rpms 
   double rpm = (dTicks*2*pi)/(ticks*gearRatio*dt);
   return rpm;
 }
