@@ -3,7 +3,7 @@
 This project was prepared by: 
 
 The initial position of the robot and the parameter calibrations were calculated by taking an average of the starting points of each bag. 
-The structure of the TF tree is present in the tfstructure.jpeg file 
+The structure of the TF tree is present in the frames.pdf file the structure of the tree was obtained by using rosrun tf view_frames
 
 WARNINGS: 
 Sometimes when the bag files recording ends and loops back due to the TF buffer being full rviz can give errors and shift the odometry. We suggest not playing the bag files with the loop functionality of rosbag turned on. 
