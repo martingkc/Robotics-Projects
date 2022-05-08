@@ -20,8 +20,11 @@ void onVelocityUpdate(const geometry_msgs::TwistStamped::ConstPtr& msg){
   double vx = msg->twist.linear.x;
   double vy = msg->twist.linear.y;
   double omega = msg->twist.angular.z;
+	
+	
+	//here we apply the reverse formulas to calculate the wheel rpms from Vx Vy and Omega that we retreive from cmd_vel
 
-
+        //these are the variables that contain calculated RPMS
   	float nrpm_fl = (60/(2*pi*wheelRadius))*(vx - vy -(wheel_x -wheel_y)*omega);
 	float nrpm_fr = (60/(2*pi*wheelRadius))*(vx + vy +(wheel_x +wheel_y)*omega);
 	float nrpm_rl = (60/(2*pi*wheelRadius))*(vx + vy -(wheel_x +wheel_y)*omega);
@@ -29,7 +32,7 @@ void onVelocityUpdate(const geometry_msgs::TwistStamped::ConstPtr& msg){
 	
 	localization_data_pub::Mrpm mrpm;
 
-
+        // here we publish the obtained values with our custom msg mrpm (mrpm has 4 spaces rpm_fl rpm_fr rpm_rl rpm_rr)
 	mrpm.rpm_fl = nrpm_fl;
 	mrpm.rpm_fr = nrpm_fr;
 	mrpm.rpm_rl = nrpm_rl;
