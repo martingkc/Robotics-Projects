@@ -17,12 +17,12 @@ ros::Publisher odom_pub;
 
 double x = 0;
 double y = 0;
-double theta= 0;
+double theta = 0;
 const double pi = 3.1415;
 const double wheelRadius = 0.07;
 const double ticksPerMeter = (1/(2*pi*wheelRadius))*42;
 const int ticks = 42;
-const double wheel_x = 0.2;
+const double wheel_x = 0.19;
 const double wheel_y = 0.169;
 bool hasPrev;
 
@@ -53,28 +53,30 @@ public:
 
 }
 
+//Choice between Euler and RK
+
 void onIntegrationMethodChange(localization_data_pub::parametersConfig &config, uint32_t level){
   switch (config.integMethod)
   {
     case 0:
-    integMethod = Euler;
-
-    //dynamic_reconfigure::Server<localization_data_pub::parametersConfig> method_server;
-    //dynamic_reconfigure::Server<localization_data_pub::parametersConfig>::CallbackType method_callback;
-
+      integMethod = Euler;
     break;
     case 1:
-    integMethod = RungeKutta;
+      integMethod = RungeKutta;
     break;
   }
 }
 
+
+
+//Computation of the several formulas and odometry publication
+
 void onVelocityUpdate(const sensor_msgs::JointState::ConstPtr& msg){
+
       if(!hasPrev){
-        previousTicks = msg ->position;
+        previousTicks = msg->position;
         hasPrev = true;
       }
-
 
       ros::Time currentTime = ros::Time::now();;
       double dt = (currentTime - previousTime).toSec();
@@ -99,15 +101,16 @@ void onVelocityUpdate(const sensor_msgs::JointState::ConstPtr& msg){
 
         case Euler:
          nX =x + (vx* cos(theta)-vy*sin(theta))*dt;
-                     nY =y+ (vx* sin(theta)+vy*cos(theta))*dt;
-               nTheta = theta + omega*dt;
-         break;
+         nY =y+ (vx* sin(theta)+vy*cos(theta))*dt;
+         nTheta = theta + omega*dt;
+        break;
+
         case RungeKutta:
           float phi = theta + omega*dt/2;
           nX =x + (vx* cos(phi)-vy*sin(phi))*dt;
-                      nY =y+ (vx* sin(phi)+vy*cos(phi))*dt;
-                nTheta = theta + omega*dt;
-          break;
+          nY =y+ (vx* sin(phi)+vy*cos(phi))*dt;
+          nTheta = theta + omega*dt;
+        break;
 
       }
 
@@ -118,32 +121,32 @@ void onVelocityUpdate(const sensor_msgs::JointState::ConstPtr& msg){
       theta = nTheta;
       previousTime = currentTime;
 
-
-
-
-
 }
+
 double rpmFromTicks(double dTicks, double dt ){
   double rpm = (dTicks*2*pi)/(ticks*gearRatio*dt);
   return rpm;
 }
+
 double calcVelX(std::vector<double> wheelRPM){
   double vx = (wheelRadius/4)*(wheelRPM[0] + wheelRPM[1] +  wheelRPM[2] + wheelRPM[3]);
   return vx;
 
 }
+
 double calcVelY(std::vector<double> wheelRPM){
   double vy = (wheelRadius/4)*(-wheelRPM[0] + wheelRPM[1] +  wheelRPM[2] - wheelRPM[3]);
   return vy;
 
 }
+
 double calcVelAng(std::vector<double> wheelRPM){
   double omega = (wheelRadius/(4*(wheel_x+wheel_y)))*(-wheelRPM[0] + wheelRPM[1] -  wheelRPM[2] + wheelRPM[3]);
   return omega;
 }
 
 
-
+//Publish the velocity as geometry_msgs/TwistStamped
 
 void publishVelocity(double vx, double vy, double omega){
   geometry_msgs::TwistStamped vel;
@@ -161,12 +164,12 @@ void publishVelocity(double vx, double vy, double omega){
     odomTransform.header.frame_id = "odom";
     odomTransform.child_frame_id = "base_link";
 
-    //Set the position
+    //Set the position with theta=0
     odomTransform.transform.translation.x = x;
     odomTransform.transform.translation.y = y;
     odomTransform.transform.translation.z = 0.0;
 
-
+    //Inizialize the quaternion, normalize and then convert to a geometry_msg
     tf2::Quaternion myQuaternion;
 
     myQuaternion.setRPY(0, 0, 0);
@@ -182,7 +185,7 @@ void publishVelocity(double vx, double vy, double omega){
     quat_msgs.w = theta;
     tf2::convert(myQuaternion, quat_msgs);
 
-
+    //Set the rotation
     odomTransform.transform.rotation.x = myQuaternion.x();
     odomTransform.transform.rotation.y = myQuaternion.y();
     odomTransform.transform.rotation.z = myQuaternion.z();
@@ -198,7 +201,7 @@ void publishVelocity(double vx, double vy, double omega){
     odomMsg.pose.pose.position.z = 0.0;
 
 
-
+    //Set the orientation
     odomMsg.pose.pose.orientation.x = myQuaternion.x();
     odomMsg.pose.pose.orientation.y = myQuaternion.y();
     odomMsg.pose.pose.orientation.z = myQuaternion.z();
@@ -210,13 +213,16 @@ void publishVelocity(double vx, double vy, double omega){
     odomMsg.twist.twist.linear.y = vy;
     odomMsg.twist.twist.angular.z = omega;
 
+    //Publish to odom topic
     odom_pub.publish(odomMsg);
 
-    //Send the transform
+    //Send the transform in broadcast
     br.sendTransform(odomTransform);
 
 
     }
+
+//Reset the pose to any given one
 
 bool resetOdometryPose(localization_data_pub::ResetPose::Request &req, localization_data_pub::ResetPose::Response &res){
   x = req.givenX;
