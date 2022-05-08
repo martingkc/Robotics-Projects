@@ -22,5 +22,5 @@
   <param name="pose/X" value="0.0"/>
   <param name="pose/Y" value="0.0"/>
   <param name="pose/Theta" value="0"/>
-  <node pkg="rosbag" type="play" name="player" args="-l --clock /home/jody/robotics/src/localization_data_pub/bags/bag2.bag"/>
+  <node pkg="rosbag" type="play" name="player" args="-l --clock /home/jody/robotics/src/localization_data_pub/bags/bag1.bag"/>
 </launch>
